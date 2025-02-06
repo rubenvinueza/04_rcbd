@@ -273,7 +273,7 @@ Remember that it is at this level that we establish the hierarchy of how our pai
 
 Let's extract it by comparing everything to everything else.
 ```{r interaction means all}
-rcbd_means_all 
+rcbd_means_all <- emmeans(rcbd_mod, ~nrate_kgha:krate_kgha)
 
 rcbd_means_all
 ```
@@ -293,7 +293,10 @@ rcbd_cld_all
 Let's do some light wrangling here to be able to plot these.  
 
 ```{r selected pwc}
-rcbd_cld_selected <- rcbd_cld_all 
+rcbd_cld_selected <- rcbd_cld_all %>%
+  as.data.frame() %>%
+  mutate(letter = trimws(.group)) %>%
+  mutate(trtname = paste0(nrate_kgha,"+", krate_kgha))
 
 rcbd_cld_selected
 ```
@@ -303,7 +306,30 @@ Let's plot our results, including both **raw data** (for allowing our audience t
 Let's make this plot publication ready.  
 
 ```{r rcbd final plot}
-
+ggplot() + 
+  geom_boxplot(data = rcbd_dfw, 
+               aes(x = trtname, 
+                   y = yield_kgha,
+                   fill = trtname)
+               ) + 
+  geom_jitter(data = rcbd_dfw,
+              aes( x = trtname, y = yield_kgha),
+              alpha = 0.6
+                   ) +
+  geom_label(data = rcbd_cld_selected,
+            aes(x = trtname, 
+                y = emmean,
+                label = letter
+                ),
+            size = 3,
+            label.padding = unit(.1, "lines")
+            ) +
+  labs(x = "N rate + K rate (kg/ha)",
+       y = "Yield (kg/ha)"
+       ) +
+  scale_fill_viridis_d() +
+  scale_color_viridis_d() + 
+  theme(legend.position = "none")
 ```
 
 
