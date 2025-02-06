@@ -330,6 +330,11 @@ ggplot() +
   scale_fill_viridis_d() +
   scale_color_viridis_d() + 
   theme(legend.position = "none")
+
+ggsave("../output/rcbd_means.png",
+       height = 4,
+       width = 6
+)
 ```
 
 
