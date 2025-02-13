@@ -41,7 +41,7 @@ Since it is a CRD, randomization is unrestricted.
 
 ```{r crd_rand}
 # Setting seed to get same randomization result every time
-set.seed(930)
+set.seed(28)
 
 crd_rand  <- crossing(trtname = trts$trtname,
                       rep = 1:4
@@ -85,6 +85,7 @@ ggplot(data = crd_layout,
             ) +
   geom_text(aes(label = lab), vjust = 0.5) + 
   labs(title = "CRD randomization of a 3 x 3 factorial (9 treatments)") +
+  scale_fill_brewer() +
   theme_void()
 
 ```
@@ -96,16 +97,27 @@ Notice how due to unrestricted randomization, we had the replication of some tre
 ## Randomization  
 ```{r rcbd_rand}
 # Setting seed to get same randomization result every time
-set.seed(930)
+set.seed(2304)
 
-rcbd_rand 
+rcbd_rand <- crossing(trtname = trts$trtname,
+                      rep = 1:4
+                      ) %>%
+  arrange(rep) %>%
+  group_by(rep) %>%
+  mutate(trtname = sample(trtname)) %>%
+  mutate(plot = (rep*100) + 1:9) %>%
+  ungroup()
+
 
 rcbd_rand
 ```
 
 Let's check if in fact each treatment appears once per block.  
 ```{r}
-rcbd_rand 
+rcbd_rand %>%
+  group_by(rep) %>%
+  tally() %>%
+  filter(n>1)
 ```
 
 ## Plot layout  
@@ -132,9 +144,10 @@ ggplot(data = rcbd_layout, aes(x = row,
             color = "black",
             show.legend = F
   )+
-  geom_text(aes(label = plot), fontface = "bold", vjust = -.8)+
-  geom_text(aes(label = trtname), vjust = 1)+
+  geom_text(aes(label = plot), fontface = "bold", vjust = -.6)+
+  geom_text(aes(label = trtname), vjust = 1.2)+
   labs(title = "RCBD randomization of a 3 x 3 factorial (9 treatments)") +
+  scale_fill_grey() +
   theme_void()
 
 ```
@@ -147,18 +160,20 @@ If this is in fact your study, you may want to export both the field randomizati
 Let's do that below for the RCBD example.  
 
 ```{r}
-rcbd_rand 
+rcbd_rand %>%
   # Retrieving other information contained in trts
-
+left_join(trts) %>%
   # Rearranging columns  
-
-
+dplyr::select(plot, rep, trtname, trtnum,
+              nrate_kgha, krate_kgha
+              ) %>%
+write_csv("../output/rcbd_randomization_table.csv")
 ```
 
 `ggsave()` will save the last plot created in the session, even if from an above chunk. Since the last plot we created was the RCBD layout, we can just go ahead and call ggsave here.  
 
 ```{r}
-ggsave("../output/rcbd_layoutmap.png",
+ggsave("../output/rcbd_layouthw.png",
        width = 6,
        height = 4,
        bg = "white")
